@@ -9,29 +9,28 @@
     ansible_become_user: root
 
   roles:
-    - include_role:
-        name: 'ypserver'
-        vars:
-          ypserver_nisdomain: "/etc/nisdomain"
-          ypserver_nismaster: "master"
-          ypserver_nisservers: [ "{{ groups['ypservers'] }}" ]
-          ypserver_usedns: false
-          ypserver_secure: true
-          ypserver_sourcedir: "/etc"
-          ypserver_maps:
-            - passwd
-            - group
+    - role: ansible-role-ypserver
+      vars:
+        ypserver_nisdomain: "/etc/nisdomain"
+        ypserver_nismaster: "master"
+        ypserver_nisservers: [ "{{ groups['ypservers'] }}" ]
+        ypserver_usedns: false
+        ypserver_secure: true
+        ypserver_sourcedir: "/etc"
+        ypserver_maps:
+          - passwd
+          - group
 
   tasks:
     - name: ping
       ping:
-    
+  
     - name: Add servers to /etc/hosts
       lineinfile:
         path: /etc/hosts
-        line: "{{ hostvars[item].ansible_host }} {{ item }}"
-        with_items:
-          ypservers_nisservers
+        line: "{{ item }}\t{{ hostvars[item]['ansible_host'] }}"
+      with_items:
+        "{{ ypserver_nisservers }}"
 
     - name: Show /etc/hosts
       command: "cat /etc/hosts"
