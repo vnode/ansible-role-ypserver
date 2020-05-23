@@ -35,8 +35,8 @@ Vagrant.configure("2") do |config|
         echo 'https://cdn.openbsd.org/pub/OpenBSD' >/etc/installurl
         pkg_add rsync--iconv python%3.7 git
         mkdir -m 700 -p #{@ansible_home}/roles
-        chown -R vagrant:vagrant #{@ansible_home}
         git clone https://github.com/vnode/ansible-role-ypserver #{@ansible_home}/roles/ypserver
+        chown -R vagrant:vagrant #{@ansible_home}
       SHELL
 
       # Complete provisioning once all boxes are up
