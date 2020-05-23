@@ -1,0 +1,36 @@
+---
+- hosts: ypservers
+  vars:
+    ansible_host_key_checking: false
+    ansible_user: vagrant
+    ansible_password: vagrant
+    ansible_become: true
+    ansible_become_method: sudo
+    ansible_become_user: root
+    ansible_role_path: "./../../"
+
+  roles:
+    - "./../":
+        ypserver_nisdomain: "/etc/nisdomain"
+        ypserver_nismaster: "master"
+        ypserver_nisservers: [ "{{ groups['ypservers'] }}" ]
+        ypserver_usedns: false
+        ypserver_secure: true
+        ypserver_sourcedir: "/etc"
+        ypserver_maps:
+          - passwd
+          - group
+
+  tasks:
+    - name: ping
+      ping:
+    
+    - name: Add servers to /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ hostvars[item].ansible_host }} {{ item }}"
+        with_items:
+          ypservers_nisservers
+
+    - name: Show /etc/hosts
+      command: "cat /etc/hosts"

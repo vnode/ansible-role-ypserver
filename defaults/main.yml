@@ -1,0 +1,8 @@
+---
+ypserver_nisdomain: ''
+ypserver_nismaster: ''
+ypserver_sourcedir: '/etc'
+ypserver_maps:
+  passwd: 'passwd'
+  master.passwd: 'master.passwd'
+  group: 'group'

@@ -1,0 +1,53 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/openbsd6"
+  config.vm.box_check_update = true
+  config.ssh.insert_key = false
+
+  # Support multiple providers
+  config.vm.provider "vmware_fusion" do |vwf|
+    vwf.memory = "256"
+    vwf.linked_clone = true
+  end
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "256"
+    vb.linked_clone = true
+  end
+
+
+  # Provision multiple boxes
+  boxes = [
+    { :name => "master", :ip => "192.0.2.2" },
+    { :name => "slave",  :ip => "192.0.2.3" }
+  ]
+  @ansible_home = "/home/vagrant/.ansible"
+
+  boxes.each do |opts|
+    config.vm.define opts[:name] do |config|
+      config.vm.hostname = opts[:name]
+      config.vm.network "private_network", ip: opts[:ip]
+
+      # Finish setting up the OpenBSD base box
+      config.vm.provision "shell", inline: <<-SHELL
+        echo 'https://cdn.openbsd.org/pub/OpenBSD' >/etc/installurl
+        pkg_add rsync--iconv python%3.7 git
+        mkdir -m 700 -p #{@ansible_home}/roles
+        chown -R vagrant:vagrant #{@ansible_home}
+        git clone https://github.com/vnode/ansible-role-ypserver #{@ansible_home}/roles/ypserver
+      SHELL
+
+      # Complete provisioning once all boxes are up
+      if opts[:name] == "slave"
+        config.vm.provision "ansible" do |ansible|
+          ansible.playbook = "test.yml"
+          ansible.inventory_path = "inventory"
+          ansible.limit = "all"
+          ansible.verbose = "v"
+        end
+      end
+    end
+  end
+end
