@@ -7,19 +7,20 @@
     ansible_become: true
     ansible_become_method: sudo
     ansible_become_user: root
-    ansible_role_path: "./../../"
 
   roles:
-    - "./../":
-        ypserver_nisdomain: "/etc/nisdomain"
-        ypserver_nismaster: "master"
-        ypserver_nisservers: [ "{{ groups['ypservers'] }}" ]
-        ypserver_usedns: false
-        ypserver_secure: true
-        ypserver_sourcedir: "/etc"
-        ypserver_maps:
-          - passwd
-          - group
+    - include_role:
+        name: 'ypserver'
+        vars:
+          ypserver_nisdomain: "/etc/nisdomain"
+          ypserver_nismaster: "master"
+          ypserver_nisservers: [ "{{ groups['ypservers'] }}" ]
+          ypserver_usedns: false
+          ypserver_secure: true
+          ypserver_sourcedir: "/etc"
+          ypserver_maps:
+            - passwd
+            - group
 
   tasks:
     - name: ping
