@@ -1,5 +1,6 @@
 ---
 - hosts: ypservers
+  gather_facts: false
   vars:
     ansible_host_key_checking: false
     ansible_user: vagrant
@@ -11,26 +12,88 @@
   roles:
     - role: ansible-role-ypserver
       vars:
-        ypserver_nisdomain: "/etc/nisdomain"
-        ypserver_nismaster: "master"
-        ypserver_nisservers: [ "{{ groups['ypservers'] }}" ]
+        ypserver_domain: "nisdomain"
+        ypserver_master: "master"
+        ypserver_servers: "{{ groups['ypservers'] }}"
         ypserver_usedns: false
-        ypserver_secure: true
-        ypserver_sourcedir: "/etc"
-        ypserver_maps:
-          - passwd
-          - group
+        ypserver_server_info:   # Must define this to ensure hosts can be contacted
+          master:
+            ip: "{{ hostvars['master']['ansible_host'] }}"
+          slave:
+            ip: "{{ hostvars['slave']['ansible_host'] }}"
+        ypserver_source_dir: "/etc/{{ ypserver_domain }}"
+        ypserver_set_cronjob: false
+
+  pre_tasks:
+    - name: Create /etc/hosts
+      copy:
+        dest: /etc/hosts
+        content: |
+          127.0.0.1 localhost
+          ::1 localhost
+
+          {% for host in ypserver_server_info %}
+          {{ ypserver_server_info[host].get('ip') }} {{ host }}
+          {% endfor %}
+        owner: root
+        group: wheel
+        mode: "0644"
+
+    - name: Create the directory to place the source files for our NIS maps
+      file:
+        path: "{{ ypserver_source_dir }}"
+        state: directory
+        owner: root
+        group: wheel
+        mode: "0700"
+      when:
+        - inventory_hostname == ypserver_master
+
+    - name: Create a master.passwd file
+      copy:
+        dest: "{{ ypserver_source_dir }}/master.passwd"
+        content: |
+          root:*************:0:0:daemon:0:0:Charlie &:/root:/bin/ksh
+          nisuser1:*************:1000:1000::0:0:NIS User #1:/nonexistent:/bin/ksh
+          nisuser2:*************:32765:32765::0:0:NIS User #2:/nonexistent:/bin/ksh
+          nobody:*:32767:32767::0:0:Unprivileged user:/nonexistent:/sbin/nologin
+        owner: root
+        group: wheel
+        mode: "0600"
+      when:
+        - inventory_hostname == ypserver_master
+
+    - name: Create a group file
+      copy:
+        dest: "{{ ypserver_source_dir }}/group"
+        content: |
+          wheel:*:0:root
+          nisgroup1:*:1000:nisuser1
+          nisgroup2:*:32765:nisuser2
+          nogroup:*:32766:
+          nobody:*:32767:
+        owner: root
+        group: wheel
+        mode: "0600"
+      when:
+        - inventory_hostname == ypserver_master
 
   tasks:
-    - name: ping
-      ping:
-  
-    - name: Add servers to /etc/hosts
-      lineinfile:
-        path: /etc/hosts
-        line: "{{ item }}\t{{ hostvars[item]['ansible_host'] }}"
-      with_items:
-        "{{ ypserver_nisservers }}"
+#    - name: Correct servers are listed in ypservers map
 
-    - name: Show /etc/hosts
-      command: "cat /etc/hosts"
+#    - name: Correct maps are provided by server
+
+
+
+
+    # password maps
+#    - name: Correct users present in master.passwd map (UID > 1000)
+#    - name: Password hash is visible in master.passwd map
+#    - name: Password hash is not visible in passwd map
+
+    # group maps
+#    - name: Correct groups present in groups map (GID > )
+
+#  post_tasks:
+#    # map consistency
+#      - name: Identical map versions shown for master and slave
