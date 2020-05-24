@@ -1,8 +1,34 @@
 ---
-ypserver_nisdomain: ''
-ypserver_nismaster: ''
-ypserver_sourcedir: '/etc'
-ypserver_maps:
-  passwd: 'passwd'
-  master.passwd: 'master.passwd'
+# Required variables
+ypserver_domain: ""
+ypserver_master: ""
+ypserver_servers: []
+ypserver_serverinfo: {}
+ypserver_ypservacl: {}          # Only if ypserver_set_ypservacl == true
+
+# YP/NIS optional settings
+ypserver_usedns: true
+ypserver_unsecure: false
+ypserver_nopush: false
+
+ypserver_source_dir: '/etc'
+ypserver_source_maps:
+  passwd: 'master.passwd'
   group: 'group'
+
+ypserver_passwd_minuid:  1000
+ypserver_passwd_maxuid: 32765
+ypserver_group_mingid:   1000
+ypserver_group_maxgid:  32765
+
+
+# Options to handle multiple YP/NIS domains on a host
+ypserver_set_domainname: true   # If true, updates /etc/domainname
+ypserver_set_yppasswdd: false   # If true, enables yppasswdd service
+ypserver_set_ypservacl: false   # If true, creates /var/yp/ypserv.acl
+ypserver_set_cronjob: true      # If true, set up a cronjob for map updates
+
+
+# No end-user servicable parts below this line
+ypserver_ypdbdir: '/var/yp'
+ypserver_ypdbdir_domain: "{{ ypserver_ypdbdir }}/{{ ypserver_domain }}"

@@ -1,2 +1,235 @@
 ---
-# tasks file for ypserver
+# Input validation
+- name: "Check: YP/NIS domain name and master server are set"
+  run_once: true
+  assert:
+    that:
+      - lookup('vars', ypserver_var) is defined
+      - lookup('vars', ypserver_var) | length > 0
+      - lookup('vars', ypserver_var) != None
+    fail_msg: "Set '{{ ypserver_var }}' to a non-empty string value."
+  loop_control:
+    loop_var: ypserver_var
+  with_items:
+    - ypserver_domain
+    - ypserver_master
+
+- name: "Check: YP/NIS server list is non-empty and contains master server"
+  run_once: true
+  assert:
+    that:
+      - ypserver_servers is defined
+      - ypserver_servers | length > 0
+      - ypserver_master in ypserver_servers
+    fail_msg: "Define 'ypserver_servers' as a list that contains the master server ('{{ ypserver_master }}') and any slave servers."
+
+- name: "Check: IP info available for servers if NIS domain does not use DNS"
+  run_once: true
+  assert:
+    that:
+      - ypserver_server_info.get(ypserver_server) is defined
+      - ypserver_server in ypserver_server_info
+      - ypserver_server_info.get(ypserver_server).get('ip') | ipaddr() or
+        ypserver_server_info.get(ypserver_server).get('ipv6') | ipaddr()
+    fail_msg: "{{ ypserver_server }} needs IP information set in 'ypserver_server_info' if using 'ypserver_usedns = false'."
+  loop_control:
+    loop_var: ypserver_server
+  with_items: "{{ ypserver_servers }}"
+  when: ypserver_usedns == false
+
+- name: "Check: ypserv.acl rules specified"
+  run_once: true
+  assert:
+    that:
+      - ypserver_ypservacl is defined
+      - ypserver_ypservacl | length > 0
+    fail_msg: "Define 'ypserver_ypservacl' as an ACL list if using 'ypserver_set_ypservacl = true'."
+  when: ypserver_set_ypservacl
+
+
+# Initialize domain database
+- name: "Create YP database directory"
+  file:
+    state: directory
+    path: "{{ ypserver_ypdbdir_domain }}"
+    mode: "0700"
+    owner: root
+    group: wheel
+
+- name: "Add YP domain to main YP Makefile"
+  lineinfile:
+    path: "{{ ypserver_ypdbdir }}/Makefile.main"
+    line: "SUBDIR += {{ ypserver_domain }}"
+    insertafter: "SUBDIR="
+    mode: "0644"
+    owner: root
+    group: wheel
+  when:
+    - inventory_hostname == ypserver_master
+
+- name: "Create YP domain Makefile"
+  template:
+    src: "Makefile.yp.j2"
+    dest: "{{ ypserver_ypdbdir_domain }}/Makefile"
+    mode: "0600"
+    owner: root
+    group: wheel
+  when:
+    - inventory_hostname == ypserver_master
+
+- name: "Update ypservers map"
+  template:
+    src: "ypservers.j2"
+    dest: "{{ ypserver_ypdbdir_domain }}/ypservers"
+    mode: "0600"
+    owner: root
+    group: wheel
+  register: ypserver__ypservers_map
+  when:
+    - inventory_hostname == ypserver_master
+
+- name: "Regenerate ypservers.db from map"
+  command:
+  args:
+    chdir: "{{ ypserver_ypdbdir_domain }}"
+    cmd: "/usr/sbin/makedbm -m {{ ypserver_master }} ypservers ypservers"
+  notify:
+    - reload ypserv
+  when:
+    - ypserver__ypservers_map.changed
+
+
+# Complete system setup
+- name: "Create /etc/yp directory"
+  file:
+    state: directory
+    path: /etc/yp
+    mode: "0700"
+    owner: root
+    group: wheel
+  when:
+    - ypserver_nopush == false
+
+- name: "Create /etc/yp/DOMAINNAME server list for ypbind"
+  template:
+    src: "DOMAINNAME.j2"
+    dest: "/etc/yp/{{ ypserver_domain }}"
+    mode: "0600"
+    owner: root
+    group: wheel
+  when:
+    - ypserver_nopush == false
+
+- name: "Save YP domainname for the system"
+  copy:
+    content: "{{ ypserver_domain }}"
+    dest: /etc/domainname
+    owner: root
+    group: wheel
+    mode: "0644"
+  register: ypserver__etc_domainname
+  when:
+    - ypserver_set_domainname
+
+- name: "Check YP domainname value on the system"
+  command:
+    cmd: "domainname"
+  register: ypserver__domainname
+  changed_when: false
+
+- name: "Update YP domainname for the system"
+  command: domainname {{ ypserver_domain }}
+  when:
+    - ypserver_set_domainname
+    - ypserver__domainname.stdout != ypserver_domain
+
+
+# Bring up the YP/NIS domain
+- name: "Enable portmap"
+  service:
+    name: portmap
+    enabled: true
+    state: started
+
+- name: "Enable ypserv"
+  service:
+    name: ypserv
+    args: >
+      "{{ '-d' if ypserver_usedns else '' }}"
+    enabled: true
+    state: started
+
+- name: "Enable yppasswdd"
+  service:
+    name: yppasswdd
+    enabled: true
+    state: started
+  when:
+    - ypserver_set_yppasswdd
+    - inventory_hostname == ypserver_master
+
+- name: "Enable ypbind"
+  service:
+    name: ypbind
+    enabled: true
+    state: started
+  when:
+    - ypserver_nopush == false
+
+
+# Map setup
+- name: "Ensure the maps exist on the master server"
+  command:
+    chdir: "{{ ypserver_ypdbdir_domain }}"
+    cmd: "make {{ item }}"
+    creates: "{{ ypserver_ypdbdir_domain }}/{{ item }}.time"
+  with_items: "{{ ypserver_source_maps }}"
+  when:
+    - inventory_hostname == ypserver_master
+
+- name: "Try up to 10min that slaves can reach the master"
+  command:
+    cmd: "ypwhich -d {{ ypserver_domain }} -h {{ ypserver_master }} -m"
+  register: ypserver__master_up
+  until: ypserver__master_up.rc == 0
+  retries: 60
+  delay: 10
+  when:
+    - inventory_hostname != ypserver_master
+    - ypserver_nopush == false
+
+- name: "Transfer maps from master server to slaves"
+  command: "ypxfr -d {{ ypserver_domain }} -h {{ ypserver_master }} {{ item.split()[0] }}"
+  with_items: "{{ ypserver__master_up.stdout_lines }}"
+  when:
+    - inventory_hostname != ypserver_master
+    - ypserver_nopush == false
+
+- name: "Ensure regular map updates on master"
+  cron:
+    name: "Update YP domain {{ ypserver_domain }}"
+    minute: "*/15"
+    job: "( cd {{ ypserver_ypdbdir_domain }} && make )"
+  when:
+    - inventory_hostname == ypserver_master
+    - ypserver_set_cronjob
+
+- name: "Place script to check for missing maps on slave"
+  template:
+    src: "ypxfr_update.sh.j2"
+    dest: "/usr/local/sbin/ypxfr_update"
+    mode: "0700"
+    owner: root
+    group: wheel
+  when:
+    - inventory_hostname != ypserver_master
+
+- name: "Ensure regular checks for missed maps on slaves"
+  cron:
+    name: "Update YP domain {{ ypserver_domain }}"
+    minute: "5"
+    hour: "*"
+    job: "-n /usr/local/sbin/ypxfr_update"
+  when:
+    - inventory_hostname != ypserver_master
+    - ypserver_set_cronjob

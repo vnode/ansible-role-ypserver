@@ -1,3 +1,8 @@
+# {{ ansible_managed }}
+#
+#	This Makefile is a patched version of the stock OpenBSD one.
+#	To update against a new upstream version, use 'files/Makefile.yp.patch'
+#
 #	$OpenBSD: Makefile.yp,v 1.18 2018/04/26 12:53:09 schwarze Exp $
 
 # ----------------------------------------------------------------------
@@ -5,25 +10,26 @@
 # ----------------------------------------------------------------------
 
 # Select the source directories to build YP maps from.
-DIR=/etc
+DIR={{ ypserver_source_dir | default('/etc') }}
 AMDDIR=$(DIR)/amd
 
 # Set this to disable automatic distribution of YP maps.
-NOPUSH=""
+NOPUSH="{{ 'True' if ypserver_nopush else '' }}"
 
 # Unset this to exclude encrypted passwords from the passwd maps.
-UNSECURE="True"
+UNSECURE="{{ 'True' if ypserver_unsecure else '' }}"
 
 # Only include UIDs and GIDs inside certain ranges into the maps.
-MINUID=1000
-MAXUID=32765
-MINGID=1000
-MAXGID=32765
+MINUID={{ ypserver_passwd_minuid | default( '1000') }}
+MAXUID={{ ypserver_passwd_maxuid | default('32765') }}
+MINGID={{ ypserver_group_mingid  | default( '1000') }}
+MAXGID={{ ypserver_group_maxgid  | default('32765') }}
 
 # Set this to -b to have ypserv ask DNS for unknown hosts.
-USEDNS=
+USEDNS="{{ '-b' if ypserver_usedns else '' }}"
 
-all: passwd group hosts ethers rpc services protocols netid netgroup amd.home aliases
+#all: passwd group hosts ethers rpc services protocols netid netgroup amd.home aliases
+all: {{ ypserver_source_maps | join(' ') }}
 	pkill -HUP ypserv
 
 # ----------------------------------------------------------------------
@@ -31,7 +37,7 @@ all: passwd group hosts ethers rpc services protocols netid netgroup amd.home al
 # ----------------------------------------------------------------------
 
 # The following is also hardcoded into ypserv(8) and other programs.
-YPDBDIR=/var/yp
+YPDBDIR={{ ypserver_ypdbdir | default('/var/yp') }}
 
 AWK=/usr/bin/awk
 CAT=/bin/cat
@@ -51,7 +57,7 @@ YPPUSH=/usr/sbin/yppush
 
 DOMAIN="`/usr/bin/basename ${.CURDIR}`"
 
-passwd.time: $(DIR)/master.passwd
+passwd.time: $(DIR)/{{ ypserver_source_maps['passwd'] | default('master.passwd') }}
 	-@if [ -f $(>) ]; then \
 		if [ ! $(UNSECURE) ]; then \
 			$(CAT) $(>) | $(CUT) -d: -f1-4,8-10 | \
@@ -106,7 +112,7 @@ passwd.time: $(DIR)/master.passwd
 	fi
 
 
-group.time: $(DIR)/group
+group.time: $(DIR)/{{ ypserver_source_maps['group'] | default('group') }}
 	-@if [ -f $(>) ]; then \
 		$(AWK) -v mingid=${MINGID} -v maxgid=${MAXGID} \
 		'BEGIN { FS=":"; OFS="\t"; } /^[a-zA-Z0-9_]/ \

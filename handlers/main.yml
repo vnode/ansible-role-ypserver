@@ -1,2 +1,5 @@
 ---
-# handlers file for ypserver
+- name: reload ypserv
+  service:
+    name: ypserv
+    state: reloaded

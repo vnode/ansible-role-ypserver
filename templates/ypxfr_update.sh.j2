@@ -1,0 +1,32 @@
+#!/bin/sh
+# {{ ansible_managed }}
+
+_usage() {
+    cat << __EOM 1>&2
+usage: `basename ${0}` -d [domainname] -m [master]
+__EOM
+    exit 1
+}
+
+
+unset _domain _master
+while getopts "d:m:" c; do
+    case "$c" in
+        d) _domain=${OPTARG}
+            ;;
+        m) _master=${OPTARG}
+            ;;
+        *) _usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [[ -z ${_domain} || -z ${_master} ]]; then
+    _usage
+fi
+
+# Update the maps in use
+{% for line in ypserver__master_up.stdout_lines %}
+ypxfr -d ${_domain} -h ${_master} {{ line.split()[0] }}
+{% endfor %}
