@@ -35,7 +35,7 @@
   loop_control:
     loop_var: ypserver_server
   with_items: "{{ ypserver_servers }}"
-  when: ypserver_usedns == false
+  when: not ypserver_usedns
 
 - name: "Check: ypserv.acl rules specified"
   run_once: true
@@ -88,7 +88,8 @@
   when:
     - inventory_hostname == ypserver_master
 
-- name: "Regenerate ypservers.db from map"
+- name: "Regenerate ypservers.db from map" # noqa 503
+  # Intentionally not a handler, as this needs to run in-line, not at end-of-play
   command:
   args:
     chdir: "{{ ypserver_ypdbdir_domain }}"
@@ -108,7 +109,7 @@
     owner: root
     group: wheel
   when:
-    - ypserver_nopush == false
+    - not ypserver_nopush
 
 - name: "Create /etc/yp/DOMAINNAME server list for ypbind"
   template:
@@ -118,7 +119,7 @@
     owner: root
     group: wheel
   when:
-    - ypserver_nopush == false
+    - not ypserver_nopush
 
 - name: "Save YP domainname for the system"
   copy:
@@ -174,7 +175,7 @@
     enabled: true
     state: started
   when:
-    - ypserver_nopush == false
+    - not ypserver_nopush
 
 
 # Map setup
@@ -196,14 +197,14 @@
   delay: 10
   when:
     - inventory_hostname != ypserver_master
-    - ypserver_nopush == false
+    - not ypserver_nopush
 
 - name: "Transfer maps from master server to slaves"
   command: "ypxfr -d {{ ypserver_domain }} -h {{ ypserver_master }} {{ item.split()[0] }}"
   with_items: "{{ ypserver__master_up.stdout_lines }}"
   when:
     - inventory_hostname != ypserver_master
-    - ypserver_nopush == false
+    - not ypserver_nopush
 
 - name: "Ensure regular map updates on master"
   cron:

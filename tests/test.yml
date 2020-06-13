@@ -80,17 +80,11 @@
 
   tasks:
 #    - name: Correct servers are listed in ypservers map
-
 #    - name: Correct maps are provided by server
-
-
-
-
     # password maps
 #    - name: Correct users present in master.passwd map (UID > 1000)
 #    - name: Password hash is visible in master.passwd map
 #    - name: Password hash is not visible in passwd map
-
     # group maps
 #    - name: Correct groups present in groups map (GID > )
 
