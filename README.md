@@ -38,7 +38,7 @@ ypserver_master: ""
 ypserver_servers: []
 ```
 *Required*, must list the set of NIS servers for the domain. This list *must* include the `ypserver_master` server as well.
---- ISSUE #2
+<!-- ISSUE #2 -->
 *Note*: not yet implemented. Please see [GitHub issue #2](https://github.com/vnode/ansible-role-ypserver/issues/2) for more info.
 
 
@@ -60,7 +60,7 @@ ypserver_serverinfo:
     ip: '192.0.2.2'
     ipv6: '2001:db8::111:2'
 ```
---- ISSUE #3
+<!-- ISSUE #3 -->
 *Note*: not yet implemented. Please see [Github issue #3](https://github.com/vnode/ansible-role-ypserver/issues/3) for more info.
 
 
@@ -68,7 +68,7 @@ ypserver_serverinfo:
 ypserver_ypservacl: {}
 ```
 *Required*, if `ypserver_set_ypserveracl` is set. This dictionary lists the rules for the [`ypserv.acl(5)`](https://man.openbsd.org/ypserv.acl) file. This ACL file allows to limit the access to the YP/NIS server to appropriate network ranges.
---- ISSUE #1
+<!-- ISSUE #1 -->
 *Note*: not yet implemented. Please see [GitHub issue #1](https://github.com/vnode/ansible-role-ypserver/issues/1) for more info.
 
 
@@ -140,7 +140,7 @@ Enables the `yppasswd` service, to allow users on the master server to change th
 ypserver_set_ypservacl: false   # If true, creates /var/yp/ypserv.acl
 ```
 Creates an ACL file `/var/yp/ypserv.acl` according to the [`ypserv.acl(5)`](https://man.openbsd.org/ypserv.acl) file. This ACL file allows to limit the access to the YP/NIS server to appropriate network ranges. Requires the `ypserver_ypservacl` variable to be set appropriately.
---- ISSUE #1
+<!-- ISSUE #1 -->
 *Note*: not yet implemented. Please see [GitHub issue #1](https://github.com/vnode/ansible-role-ypserver/issues/1) for more info.
 
 ```yaml
@@ -148,7 +148,8 @@ ypserver_set_cronjob: true      # If true, set up a cronjob for map updates
 ```
 Recommended to leave at `true` unless you need/want other arrangements than those made by the role. Sets up a regular cron job for map updates on the domain and checks for missing maps on slave servers.
 
-| Job name                             | Interval          | Note(s) |
+| Job name                             | Interval          | Note(s)          |
+|--------------------------------------|-------------------|------------------|
 | Update YP domain `ypserver_ypdomain` | Every 15 minutes  | On master server |
 | Update YP domain `ypserver_ypdomain` | Every hour at :05 | On slave servers |
 
