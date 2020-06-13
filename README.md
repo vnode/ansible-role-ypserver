@@ -18,7 +18,7 @@ For testing and development, this role depends on the following external tools:
 
 # Role Variables
 Available variables are listed below, including their default values (see `defaults/main.yml`).
-Any of these *should* be implemented. If you find they are not, please open an issue in the GitHub repository.
+Any of these *should* be implemented. If you find they are not, please [open an issue](https://github.com/vnode/ansible-role-ypserver/issues) in the GitHub repository.
 
 
 ## Required variables
