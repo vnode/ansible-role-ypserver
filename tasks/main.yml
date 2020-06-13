@@ -27,11 +27,11 @@
   run_once: true
   assert:
     that:
-      - ypserver_server_info.get(ypserver_server) is defined
+      - ypserver_serverinfo.get(ypserver_server) is defined
       - ypserver_server in ypserver_server_info
-      - ypserver_server_info.get(ypserver_server).get('ip') | ipaddr() or
-        ypserver_server_info.get(ypserver_server).get('ipv6') | ipaddr()
-    fail_msg: "{{ ypserver_server }} needs IP information set in 'ypserver_server_info' if using 'ypserver_usedns = false'."
+      - ypserver_serverinfo.get(ypserver_server).get('ip') | ipaddr() or
+        ypserver_serverinfo.get(ypserver_server).get('ipv6') | ipaddr()
+    fail_msg: "{{ ypserver_server }} needs IP information set in 'ypserver_serverinfo' if using 'ypserver_usedns = false'."
   loop_control:
     loop_var: ypserver_server
   with_items: "{{ ypserver_servers }}"

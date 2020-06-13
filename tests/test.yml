@@ -16,7 +16,7 @@
         ypserver_master: "master"
         ypserver_servers: "{{ groups['ypservers'] }}"
         ypserver_usedns: false
-        ypserver_server_info:   # Must define this to ensure hosts can be contacted
+        ypserver_serverinfo:   # Must define this to ensure hosts can be contacted
           master:
             ip: "{{ hostvars['master']['ansible_host'] }}"
           slave:
