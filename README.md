@@ -18,7 +18,7 @@ For testing and development, this role depends on the following external tools:
 
 # Role Variables
 Available variables are listed below, including their default values (see `defaults/main.yml`).
-Any of these *should* be implemented. If you find they are not, please [open an issue](https://github.com/vnode/ansible-role-ypserver/issues) in the GitHub repository.
+All of these *should* be implemented. If you find they are not, please [open an issue](https://github.com/vnode/ansible-role-ypserver/issues) in the GitHub repository.
 
 
 ## Required variables
@@ -180,7 +180,6 @@ Below is an example to create a simple YP//NIS domain with two servers, `master`
         ypserver_master: master
         ypserver_servers: "{{ groups['ypservers'] }}"
         ypserver_source_dir: "/etc/{{ ypserver_domain }}"
-    }
 ```
 
 
