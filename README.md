@@ -131,20 +131,20 @@ Recommended to leave at `true` for the domain that is intended as your 'main' (d
 These variables are not required for role invocations and their defaults should be fine.
 
 ```yaml
-ypserver_set_yppasswdd: false   # If true, enables yppasswdd service
+ypserver_set_yppasswdd: false
 ```
 Enables the `yppasswd` service, to allow users on the master server to change their password in the NIS maps. Note that recent versions of OpenBSD (as of 5.9) no longer have this functionality included.
 
 
 ```yaml
-ypserver_set_ypservacl: false   # If true, creates /var/yp/ypserv.acl
+ypserver_set_ypservacl: false
 ```
 Creates an ACL file `/var/yp/ypserv.acl` according to the [`ypserv.acl(5)`](https://man.openbsd.org/ypserv.acl) file. This ACL file allows to limit the access to the YP/NIS server to appropriate network ranges. Requires the `ypserver_ypservacl` variable to be set appropriately.
 <!-- ISSUE #1 -->
 *Note*: not yet implemented. Please see [GitHub issue #1](https://github.com/vnode/ansible-role-ypserver/issues/1) for more info.
 
 ```yaml
-ypserver_set_cronjob: true      # If true, set up a cronjob for map updates
+ypserver_set_cronjob: true
 ```
 Recommended to leave at `true` unless you need/want other arrangements than those made by the role. Sets up a regular cron job for map updates on the domain and checks for missing maps on slave servers.
 
