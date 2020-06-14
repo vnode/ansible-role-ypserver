@@ -128,7 +128,7 @@
     block: |
       {% for host in ypserver_serverinfo -%}
       {% for addr in ypserver_serverinfo[host] | ipaddr() -%}
-      {{ addr }}	{{ host }}
+      {{ addr }} {{ host }}
       {% endfor -%}
       {% endfor %}
     marker: "# {mark} YP/NIS servers - {{ ypserver_domain }}"
