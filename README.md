@@ -54,15 +54,12 @@ The example below lists addresses for the `master` and `slave` servers in a dual
 ```yaml
 ypserver_serverinfo:
   master:
-    ip: '192.0.2.1'
-    ipv6: '2001:db8::111:1'
+    - "192.0.2.1"
+    - "2001:db8::111:1"
   slave:
-    ip: '192.0.2.2'
-    ipv6: '2001:db8::111:2'
+    - "192.0.2.2"
+    - "2001:db8::111:2"
 ```
-<!-- ISSUE #3 -->
-*Note*: not yet implemented. Please see [Github issue #3](https://github.com/vnode/ansible-role-ypserver/issues/3) for more info.
-
 
 ```yaml
 ypserver_ypservacl: {}
@@ -76,7 +73,7 @@ ypserver_ypservacl: {}
 ```yaml
 ypserver_usedns: true
 ```
-Specifies that the YP/NIS maps can use DNS for lookups of host names. Recommended to leave at `true `.
+Specifies that the YP/NIS maps can use DNS for lookups of host names. Recommended to leave at `true `. When set to `false`, make sure that `ypserver_serverinfo` and/or `ypserver_set_hosts` are set correctly so that your NIS servers can be resolved.
 
 
 ```yaml
@@ -129,6 +126,11 @@ Recommended to leave at `true` for the domain that is intended as your 'main' (d
 
 ## Additional settings
 These variables are not required for role invocations and their defaults should be fine.
+
+```yaml
+ypserver_set_hosts: false
+```
+If set to `true`, the role adds the IP information for the NIS servers to the `/etc/hosts` file. This is typically useful when the domain does not use DNS lookups (`ypserver_usedns` set to `false`). Note that this does require IP information for *each* NIS server in the `ypserver_serverinfo` variable.
 
 ```yaml
 ypserver_set_yppasswdd: false

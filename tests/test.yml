@@ -18,27 +18,14 @@
         ypserver_usedns: false
         ypserver_serverinfo:   # Must define this to ensure hosts can be contacted
           master:
-            ip: "{{ hostvars['master']['ansible_host'] }}"
+            - "{{ hostvars['master']['ansible_host'] }}"
           slave:
-            ip: "{{ hostvars['slave']['ansible_host'] }}"
+            - "{{ hostvars['slave']['ansible_host'] }}"
         ypserver_source_dir: "/etc/{{ ypserver_domain }}"
+        ypserver_set_hosts: true
         ypserver_set_cronjob: false
 
   pre_tasks:
-    - name: Create /etc/hosts
-      copy:
-        dest: /etc/hosts
-        content: |
-          127.0.0.1 localhost
-          ::1 localhost
-
-          {% for host in ypserver_server_info %}
-          {{ ypserver_server_info[host].get('ip') }} {{ host }}
-          {% endfor %}
-        owner: root
-        group: wheel
-        mode: "0644"
-
     - name: Create the directory to place the source files for our NIS maps
       file:
         path: "{{ ypserver_source_dir }}"

@@ -23,6 +23,7 @@ ypserver_group_maxgid:  32765
 
 
 # Options to handle multiple YP/NIS domains on a host
+ypserver_set_hosts: false       # If true, updates /etc/hosts
 ypserver_set_domainname: true   # If true, updates /etc/domainname
 ypserver_set_yppasswdd: false   # If true, enables yppasswdd service
 ypserver_set_ypservacl: false   # If true, creates /var/yp/ypserv.acl

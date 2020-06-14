@@ -28,14 +28,15 @@
   assert:
     that:
       - ypserver_serverinfo.get(ypserver_server) is defined
-      - ypserver_server in ypserver_server_info
-      - ypserver_serverinfo.get(ypserver_server).get('ip') | ipaddr() or
-        ypserver_serverinfo.get(ypserver_server).get('ipv6') | ipaddr()
-    fail_msg: "{{ ypserver_server }} needs IP information set in 'ypserver_serverinfo' if using 'ypserver_usedns = false'."
+      - ypserver_server in ypserver_serverinfo
+      - ypserver_serverinfo.get(ypserver_server) | ipaddr
+    fail_msg: "{{ ypserver_server }} needs IP information set in 'ypserver_serverinfo' if using 'ypserver_usedns = false' and 'ypserver_set_hosts = true'."
   loop_control:
     loop_var: ypserver_server
   with_items: "{{ ypserver_servers }}"
-  when: not ypserver_usedns
+  when:
+    - not ypserver_usedns
+    - ypserver_set_hosts
 
 - name: "Check: ypserv.acl rules specified"
   run_once: true
@@ -120,6 +121,26 @@
     group: wheel
   when:
     - not ypserver_nopush
+
+- name: "Add servers to /etc/hosts"
+  blockinfile:
+    path: "/etc/hosts"
+    block: |
+      {% for host in ypserver_serverinfo -%}
+      {% for addr in ypserver_serverinfo[host] | ipaddr() -%}
+      {{ addr }}	{{ host }}
+      {% endfor -%}
+      {% endfor %}
+    marker: "# {mark} YP/NIS servers - {{ ypserver_domain }}"
+    mode: "0644"
+    owner: root
+    group: wheel
+  loop_control:
+      loop_var: ypserver_server
+  with_items: "{{ ypserver_servers }}"
+  when:
+    - ypserver_set_hosts
+
 
 - name: "Save YP domainname for the system"
   copy:
