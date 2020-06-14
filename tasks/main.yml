@@ -179,6 +179,10 @@
     args: >
       "{{ '-d' if ypserver_usedns else '' }}"
     enabled: true
+
+- name: "Start ypserv"
+  service:
+    name: ypserv
     state: started
 
 - name: "Enable yppasswdd"

@@ -22,6 +22,8 @@ All of these *should* be implemented. If you find they are not, please [open an 
 
 
 ## Required variables
+The following variables need to be set when using the role.
+
 ```yaml
 ypserver_domain: ""
 ```
