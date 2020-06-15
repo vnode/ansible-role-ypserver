@@ -3,7 +3,7 @@ galaxy_info:
   author: Rogier Krieger
   description: Install and configure YP server
   company: vNode.net
-  # issue_tracker_url: http://example.com/issue/tracker   # Done on Github
+  issue_tracker_url: https://github.com/vnode/ansible-role-ypserver/issues/
   license: MIT
   min_ansible_version: 2.9
   # If this a Container Enabled role, provide the minimum Ansible Container version.
