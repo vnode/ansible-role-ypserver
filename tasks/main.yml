@@ -125,19 +125,12 @@
 - name: "Add servers to /etc/hosts"
   blockinfile:
     path: "/etc/hosts"
-    block: |
-      {% for host in ypserver_serverinfo -%}
-      {% for addr in ypserver_serverinfo[host] | ipaddr() -%}
-      {{ addr }} {{ host }}
-      {% endfor -%}
-      {% endfor %}
+    block: "{{ lookup('template', 'templates/hosts.j2') }}" # noqa 203
+    # The tab characters are intentional
     marker: "# {mark} YP/NIS servers - {{ ypserver_domain }}"
     mode: "0644"
     owner: root
     group: wheel
-  loop_control:
-      loop_var: ypserver_server
-  with_items: "{{ ypserver_servers }}"
   when:
     - ypserver_set_hosts
 
