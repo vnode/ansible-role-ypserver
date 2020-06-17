@@ -41,7 +41,7 @@ ypserver_servers: []
 ```
 *Required*, must list the set of NIS servers for the domain. This list *must* include the `ypserver_master` server as well.
 <!-- ISSUE #2 -->
-*Note*: requiring the `ypserver_master` in the list could be improved. Please see [GitHub issue #2](https://github.com/vnode/ansible-role-ypserver/issues/2) for more info.
+*Note*: if you only wish to setup slaves servers (against an already existing master), ensure that the master is *not* part of the host group you apply this role to.
 
 
 ```yaml
