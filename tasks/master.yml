@@ -1,0 +1,45 @@
+---
+- name: "Add YP domain to main YP Makefile"
+  lineinfile:
+    path: "{{ ypserver_ypdbdir }}/Makefile.main"
+    line: "SUBDIR += {{ ypserver_domain }}"
+    insertafter: "SUBDIR="
+    mode: "0644"
+    owner: root
+    group: wheel
+
+- name: "Create YP domain Makefile"
+  template:
+    src: "Makefile.yp.j2"
+    dest: "{{ ypserver_ypdbdir_domain }}/Makefile"
+    mode: "0600"
+    owner: root
+    group: wheel
+
+- name: "Update ypservers map"
+  template:
+    src: "ypservers.j2"
+    dest: "{{ ypserver_ypdbdir_domain }}/ypservers"
+    mode: "0600"
+    owner: root
+    group: wheel
+  register: ypserver__ypservers_map
+
+- name: "Regenerate ypservers.db from map" # noqa 503
+  # Intentionally not a handler, as this needs to run in-line, not at end-of-play
+  command:
+  args:
+    chdir: "{{ ypserver_ypdbdir_domain }}"
+    cmd: "/usr/sbin/makedbm -m {{ ypserver_master }} ypservers ypservers"
+  notify:
+    - reload ypserv
+  when:
+    - ypserver__ypservers_map.changed
+
+- name: "Ensure the maps exist on the master server"
+  command:
+    chdir: "{{ ypserver_ypdbdir_domain }}"
+    # NOPUSH=True ensures we only update locally
+    cmd: "make NOPUSH=True {{ item }}"
+    creates: "{{ ypserver_ypdbdir_domain }}/{{ item }}.time"
+  with_items: "{{ ypserver_source_maps }}"

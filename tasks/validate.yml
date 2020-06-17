@@ -1,0 +1,43 @@
+---
+- name: "Check: YP/NIS domain name and master server are set"
+  assert:
+    that:
+      - lookup('vars', ypserver_var) is defined
+      - lookup('vars', ypserver_var) | length > 0
+      - lookup('vars', ypserver_var) != None
+    fail_msg: "Set '{{ ypserver_var }}' to a non-empty string value."
+  loop_control:
+    loop_var: ypserver_var
+  with_items:
+    - ypserver_domain
+    - ypserver_master
+
+- name: "Check: YP/NIS server list is non-empty and contains master server"
+  assert:
+    that:
+      - ypserver_servers is defined
+      - ypserver_servers | length > 0
+      - ypserver_master in ypserver_servers
+    fail_msg: "Define 'ypserver_servers' as a list that contains the master server ('{{ ypserver_master }}') and any slave servers."
+
+- name: "Check: IP info available for servers if NIS domain does not use DNS"
+  assert:
+    that:
+      - ypserver_serverinfo.get(ypserver_server) is defined
+      - ypserver_server in ypserver_serverinfo
+      - ypserver_serverinfo.get(ypserver_server) | ipaddr
+    fail_msg: "{{ ypserver_server }} needs IP information set in 'ypserver_serverinfo' if using 'ypserver_usedns = false' and 'ypserver_set_hosts = true'."
+  loop_control:
+    loop_var: ypserver_server
+  with_items: "{{ ypserver_servers }}"
+  when:
+    - not ypserver_usedns
+    - ypserver_set_hosts
+
+- name: "Check: ypserv.acl rules specified"
+  assert:
+    that:
+      - ypserver_ypservacl is defined
+      - ypserver_ypservacl | length > 0
+    fail_msg: "Define 'ypserver_ypservacl' as an ACL list if using 'ypserver_set_ypservacl = true'."
+  when: ypserver_set_ypservacl
