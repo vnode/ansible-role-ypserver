@@ -1,7 +1,7 @@
 galaxy_info:
   role_name: ypserver
   author: Rogier Krieger
-  description: Install and configure YP server
+  description: Install and configure a YP/NIS server
   company: vNode.net
   issue_tracker_url: https://github.com/vnode/ansible-role-ypserver/issues/
   license: MIT
