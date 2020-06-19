@@ -67,9 +67,29 @@ ypserver_serverinfo:
 ypserver_ypservacl: {}
 ```
 *Required*, if `ypserver_set_ypserveracl` is set. This dictionary lists the rules for the [`ypserv.acl(5)`](https://man.openbsd.org/ypserv.acl) file. This ACL file allows to limit the access to the YP/NIS server to appropriate network ranges.
-<!-- ISSUE #1 -->
-*Note*: not yet implemented. Please see [GitHub issue #1](https://github.com/vnode/ansible-role-ypserver/issues/1) for more info.
+If `ypserver_set_ypserveracl` is not set, this variable will create a [`securenet(5)`](https://man.openbsd.org/securenet) file instead which is a more limited format. Please ensure your rules take these limitations into account by checking against the applicable man pages.
 
+Be sure to include your slave servers as well as clients that need to access YP/NIS. For example, if you want to allow your local host, the one slave server `slave` and the `192.0.2.0/24` network clients, you would use:
+```yaml
+ypserver_ypservacl:
+  - action: allow
+    type: host
+    host: "localhost"
+  - action: allow
+    type: host
+    host: "master"
+  - action: allow
+    type: host
+    host: "192.0.2.2"
+    tag: "slave"
+  - action: allow
+    type: net
+    host: "192.0.2.0"
+    mask: "255.255.255.0"
+    tag: "Clients"
+  - action: deny
+    type: all
+```
 
 ## Optional variables
 ```yaml
@@ -143,9 +163,7 @@ Enables the `yppasswd` service, to allow users on the master server to change th
 ```yaml
 ypserver_set_ypservacl: false
 ```
-Creates an ACL file `/var/yp/ypserv.acl` according to the [`ypserv.acl(5)`](https://man.openbsd.org/ypserv.acl) file. This ACL file allows to limit the access to the YP/NIS server to appropriate network ranges. Requires the `ypserver_ypservacl` variable to be set appropriately.
-<!-- ISSUE #1 -->
-*Note*: not yet implemented. Please see [GitHub issue #1](https://github.com/vnode/ansible-role-ypserver/issues/1) for more info.
+Creates an ACL file `/var/yp/ypserv.acl` according to the [`ypserv.acl(5)`](https://man.openbsd.org/ypserv.acl) file instead of the [`securenet(5)`](https://man.openbsd.org/securenet) file. This ACL file allows to limit the access to the YP/NIS server to appropriate network ranges. Requires the `ypserver_ypservacl` variable to be set appropriately.
 
 ```yaml
 ypserver_set_cronjob: true

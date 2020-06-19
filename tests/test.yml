@@ -15,6 +15,24 @@
         ypserver_domain: "nisdomain"
         ypserver_master: "master"
         ypserver_servers: "{{ groups['ypservers'] }}"
+        ypserver_ypservacl:
+          - action: allow
+            type: host
+            host: "localhost"
+          - action: allow
+            type: host
+            host: "master"
+          - action: allow
+            type: host
+            host: "192.0.2.2"
+            tag: "slave"
+          - action: allow
+            type: net
+            host: "192.0.2.0"
+            mask: "255.255.255.0"
+            tag: "Clients"
+          - action: deny
+            type: all
         ypserver_usedns: false
         ypserver_serverinfo:   # Must define this to ensure hosts can be contacted
           master:
@@ -24,6 +42,7 @@
         ypserver_source_dir: "/etc/{{ ypserver_domain }}"
         ypserver_set_hosts: true
         ypserver_set_cronjob: false
+        ypserver_set_ypservacl: true
 
   pre_tasks:
     - name: Create the directory to place the source files for our NIS maps

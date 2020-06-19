@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+# See securenet(5) for more information.
+
+{% for rule in ypserver_ypservacl | selectattr('action', 'equalto', 'allow') %}
+{% if rule.tag is defined and rule.tag | length > 0 %}
+# {{ rule.tag }}
+{% endif %}
+{% if rule.type == 'net' and rule.host | ipaddr() and rule.mask | ipaddr %}
+{{ rule.mask }} {{ rule.host }}
+{%- elif rule.type == 'host' and rule.host | ipv4 %}
+255.255.255.255 {{ rule.host }}
+{% endif %}
+{% endfor %}

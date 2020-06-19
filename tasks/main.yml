@@ -73,6 +73,27 @@
     - ypserver_set_domainname
     - ypserver__domainname.stdout != ypserver_domain
 
+- name: "Limit access to YP/NIS server - securenet(5) file"
+  template:
+    src: "securenet.j2"
+    dest: "{{ ypserver_ypdbdir }}/securenet"
+    mode: "0600"
+    owner: root
+    group: wheel
+  when:
+    - ypserver_ypservacl | length > 0
+    - not ypserver_set_ypservacl
+
+- name: "Limit access to YP/NIS server - ypserv.acl(5) file"
+  template:
+    src: "ypserv.acl.j2"
+    dest: "{{ ypserver_ypdbdir }}/ypserv.acl"
+    mode: "0600"
+    owner: root
+    group: wheel
+  when:
+    - ypserver_ypservacl | length > 0
+    - ypserver_set_ypservacl
 
 # Bring up the YP/NIS domain
 - name: "Enable portmap"
@@ -86,6 +107,7 @@
     name: ypserv
     args: >
       "{{ '-d' if ypserver_usedns else '' }}"
+      "{{ '-a /var/yp/ypserv.acl' if ypserver_set_ypservacl else '' }}"
     enabled: true
 
 - name: "Start ypserv"

@@ -1,2 +1,19 @@
 # {{ ansible_managed }}
 # See ypserv.acl(5) for more information.
+
+# Evaluated on first-match basis
+{% for rule in ypserver_ypservacl %}
+{{ rule.action }}{{ ' ' }}
+{%- if rule.type == 'net' and rule.host | ipaddr -%}
+    {{ rule.type }} {{ rule.host }} netmask {{ rule.mask }}
+{%- elif rule.type == 'host' -%}
+    {{ rule.type }} {{ rule.host }}
+{%- else -%}
+    {{ rule.type }}
+{%- endif -%}
+{%- if rule.tag is defined and rule.tag | length > 0 -%}
+    {{ "\t" }}# {{ rule.tag }}{{ "\n" }}
+{%- else -%}
+    {{ "\n" }}
+{%- endif %}
+{% endfor %}
