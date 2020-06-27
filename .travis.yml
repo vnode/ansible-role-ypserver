@@ -5,6 +5,10 @@ python: "2.7"
 # Use the new container infrastructure
 sudo: false
 
+env:
+  global:
+   - ROLE_NAME: ypserver
+
 # Install ansible
 addons:
   apt:
@@ -23,6 +27,12 @@ install:
 
   # Install pre-requisite roles/collections
   - ansible-galaxy install -r tests/requirements.yml
+
+before_script:
+  # Use actual Ansible Galaxy role name for the project directory.
+  - cd ../
+  - mv ansible-role-${ROLE_NAME} vnode.${ROLE_NAME}
+  - cd vnode.${ROLE_NAME}
 
 script:
   # Basic role syntax check

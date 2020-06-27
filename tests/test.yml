@@ -1,6 +1,6 @@
 ---
 - hosts: ypservers
-  gather_facts: false
+#  gather_facts: false
   vars:
     ansible_host_key_checking: false
     ansible_user: vagrant
@@ -10,7 +10,7 @@
     ansible_become_user: root
 
   roles:
-    - role: ansible-role-ypserver
+    - role: "{{ 'vnode.' if lookup('env','ROLE_NAME') else 'ansible-role-' }}ypserver"
       vars:
         ypserver_domain: "nisdomain"
         ypserver_master: "master"
