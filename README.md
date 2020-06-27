@@ -1,4 +1,7 @@
 # Ansible role: ypserver
+
+[![Build Status](https://travis-ci.org/vnode/ansible-role-ypserver.svg?branch=master)](https://travis-ci.org/vnode/ansible-role-ypserver)
+
 This role installs and configures the YP/NIS server that is part of OpenBSD and other BSD* operating systems.
 Currently, this role only supports OpenBSD, with the intent on adding FreeBSD and NetBSD in a near-future update.
 
@@ -182,6 +185,7 @@ These variables are used in the role internally and are not intended for user mo
 ```yaml
 ypserver_ypdbdir: '/var/yp'
 ypserver_ypdbdir_domain: "{{ ypserver_ypdbdir }}/{{ ypserver_domain }}"
+ypserver_securenet: "{{ ypserver_ypdbdir }}/securenet"
 ```
 
 
