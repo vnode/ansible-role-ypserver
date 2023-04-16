@@ -24,9 +24,6 @@ jobs:
       - name: Install linting dependencies
         run: pip3 install yamllint ansible-core ansible-lint
 
-      - name: Install role dependencies
-        run: ansible-galaxy install -r tests/requirements.yml
-
       - name: Create ansible.cfg for testing
         run: |
           cat <<EOF > ansible.cfg
@@ -46,6 +43,9 @@ jobs:
         run: |
           mkdir -p roles
           ln -s . roles/vnode.ypserver
+
+      - name: Install role dependencies
+        run: ansible-galaxy install -r tests/requirements.yml
 
       - name: Lint code
         run: |
