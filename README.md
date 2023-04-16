@@ -1,6 +1,6 @@
 # Ansible role: ypserver
 
-[![Build Status](https://travis-ci.org/vnode/ansible-role-ypserver.svg?branch=master)](https://travis-ci.org/vnode/ansible-role-ypserver)
+[![CI](https://github.com/vnode/ansible-role-ypserver/actions/workflows/ci.yml/badge.svg)](https://github.com/vnode/ansible-role-ypserver/actions/workflows/ci.yml)
 
 This role installs and configures the YP/NIS server that is part of OpenBSD and other BSD* operating systems.
 Currently, this role only supports OpenBSD, with the intent on adding FreeBSD and NetBSD in a near-future update.
