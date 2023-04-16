@@ -147,7 +147,7 @@
     - not ypserver_nopush
 
 - name: "Transfer maps from master server to slaves"
-  ansible.builtin.command:
+  ansible.builtin.command: # noqa no-changed-when
     cmd: "ypxfr -d {{ ypserver_domain }} -h {{ ypserver_master }} {{ item.split()[0] }}"
   with_items: "{{ ypserver__master_up.stdout_lines }}"
   when:

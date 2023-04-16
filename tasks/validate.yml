@@ -1,6 +1,6 @@
 ---
 - name: "Check: YP/NIS domain name and master server are set"
-  assert:
+  ansible.builtin.assert:
     that:
       - lookup('vars', ypserver_var) is defined
       - lookup('vars', ypserver_var) | length > 0
@@ -13,7 +13,7 @@
     - ypserver_master
 
 - name: "Check: YP/NIS server list is non-empty and contains master server"
-  assert:
+  ansible.builtin.assert:
     that:
       - ypserver_servers is defined
       - ypserver_servers | length > 0
@@ -21,7 +21,7 @@
     fail_msg: "Define 'ypserver_servers' as a list that contains the master server ('{{ ypserver_master }}') and any slave servers."
 
 - name: "Check: IP info available for servers if NIS domain does not use DNS"
-  assert:
+  ansible.builtin.assert:
     that:
       - ypserver_serverinfo.get(ypserver_server) is defined
       - ypserver_server in ypserver_serverinfo
@@ -35,7 +35,7 @@
     - ypserver_set_hosts
 
 - name: "Check: ypserv.acl rules specified"
-  assert:
+  ansible.builtin.assert:
     that:
       - ypserver_ypservacl is defined
       - ypserver_ypservacl | length > 0
