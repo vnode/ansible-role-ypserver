@@ -1,0 +1,53 @@
+---
+name: CI
+on:
+  pull_request:
+  push:
+  schedule:
+    # Sunday 05:30 UTC
+    - cron: "30 5 * * 0"
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install linting dependencies
+        run: pip3 install yamllint ansible-core ansible-lint
+
+      - name: Install role dependencies
+        run: ansible-galaxy install -r tests/requirements.yml
+
+      - name: Create ansible.cfg for testing
+        run: |
+          cat <<EOF > ansible.cfg
+          [defaults]
+          inventory = inventory
+          roles_path = roles
+          EOF
+
+      - name: Create inventory for testing
+        run: |
+          cat <<EOF > inventory
+          [all]
+          localhost ansible_host=127.0.0.1
+          EOF
+
+      - name: Enable dependency roles
+        run: |
+          mkdir -p roles
+          ln -s . roles/vnode.ypserver
+
+      - name: Lint code
+        run: |
+          yamllint .
+          ansible-lint
