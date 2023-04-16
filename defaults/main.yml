@@ -16,10 +16,10 @@ ypserver_source_maps:
   passwd: 'master.passwd'
   group: 'group'
 
-ypserver_passwd_minuid:  1000
+ypserver_passwd_minuid: 1000
 ypserver_passwd_maxuid: 32765
-ypserver_group_mingid:   1000
-ypserver_group_maxgid:  32765
+ypserver_group_mingid: 1000
+ypserver_group_maxgid: 32765
 
 
 # Options to handle multiple YP/NIS domains on a host
