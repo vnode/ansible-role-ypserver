@@ -1,11 +1,11 @@
 ---
 - name: "Do input validation"
   run_once: True
-  import_tasks: validate.yml
+  ansible.builtin.import_tasks: validate.yml
 
 # Initialize domain database
 - name: "Create YP database directory"
-  file:
+  ansible.builtin.file:
     state: directory
     path: "{{ ypserver_ypdbdir_domain }}"
     mode: "0700"
@@ -13,13 +13,13 @@
     group: wheel
 
 - name: "Provision master server"
-  import_tasks: master.yml
+  ansible.builtin.import_tasks: master.yml
   when:
    - inventory_hostname == ypserver_master
 
 # Complete system setup
 - name: "Create /etc/yp directory"
-  file:
+  ansible.builtin.file:
     state: directory
     path: /etc/yp
     mode: "0700"
@@ -29,7 +29,7 @@
     - not ypserver_nopush
 
 - name: "Create /etc/yp/DOMAINNAME server list for ypbind"
-  template:
+  ansible.builtin.template:
     src: "DOMAINNAME.j2"
     dest: "/etc/yp/{{ ypserver_domain }}"
     mode: "0600"
@@ -39,7 +39,7 @@
     - not ypserver_nopush
 
 - name: "Add servers to /etc/hosts"
-  blockinfile:
+  ansible.builtin.blockinfile:
     path: "/etc/hosts"
     block: "{{ lookup('template', 'templates/hosts.j2') }}" # noqa no-tabs
     # The tab characters are intentional
@@ -51,7 +51,7 @@
     - ypserver_set_hosts
 
 - name: "Save YP domainname for the system"
-  copy:
+  ansible.builtin.copy:
     content: "{{ ypserver_domain }}"
     dest: /etc/domainname
     owner: root
@@ -62,19 +62,20 @@
     - ypserver_set_domainname
 
 - name: "Check YP domainname value on the system"
-  command:
+  ansible.builtin.command:
     cmd: "domainname"
   register: ypserver__domainname
-  changed_when: false
+  changed_when: False
 
 - name: "Update YP domainname for the system"
-  command: domainname {{ ypserver_domain }}
+  ansible.builtin.command:
+    cmd: domainname {{ ypserver_domain }} # noqa no-changed-when
   when:
     - ypserver_set_domainname
     - ypserver__domainname.stdout != ypserver_domain
 
 - name: "Limit access to YP/NIS server - securenet(5) file"
-  template:
+  ansible.builtin.template:
     src: "securenet.j2"
     dest: "{{ ypserver_ypdbdir }}/securenet"
     mode: "0600"
@@ -85,7 +86,7 @@
     - not ypserver_set_ypservacl
 
 - name: "Limit access to YP/NIS server - ypserv.acl(5) file"
-  template:
+  ansible.builtin.template:
     src: "ypserv.acl.j2"
     dest: "{{ ypserver_ypdbdir }}/ypserv.acl"
     mode: "0600"
@@ -97,37 +98,37 @@
 
 # Bring up the YP/NIS domain
 - name: "Enable portmap"
-  service:
+  ansible.builtin.service:
     name: portmap
-    enabled: true
+    enabled: True
     state: started
 
 - name: "Enable ypserv"
-  service:
+  ansible.builtin.service:
     name: ypserv
     args: >
       "{{ '-d' if ypserver_usedns else '' }}"
       "{{ '-a /var/yp/ypserv.acl' if ypserver_set_ypservacl else '' }}"
-    enabled: true
+    enabled: True
 
 - name: "Start ypserv"
-  service:
+  ansible.builtin.service:
     name: ypserv
     state: started
 
 - name: "Enable yppasswdd"
-  service:
+  ansible.builtin.service:
     name: yppasswdd
-    enabled: true
+    enabled: True
     state: started
   when:
     - ypserver_set_yppasswdd
     - inventory_hostname == ypserver_master
 
 - name: "Enable ypbind"
-  service:
+  ansible.builtin.service:
     name: ypbind
-    enabled: true
+    enabled: True
     state: started
   when:
     - not ypserver_nopush
@@ -135,8 +136,8 @@
 
 # Map distribution
 - name: "Try up to 10min that slaves can reach the master"
-  command:
-    cmd: "ypwhich -d {{ ypserver_domain }} -h {{ ypserver_master }} -m"
+  ansible.builtin.command:
+    cmd: "ypwhich -d {{ ypserver_domain }} -h {{ ypserver_master }} -m" # noqa no-changed-when
   register: ypserver__master_up
   until: ypserver__master_up.rc == 0
   retries: 60
@@ -146,14 +147,15 @@
     - not ypserver_nopush
 
 - name: "Transfer maps from master server to slaves"
-  command: "ypxfr -d {{ ypserver_domain }} -h {{ ypserver_master }} {{ item.split()[0] }}"
+  ansible.builtin.command:
+    cmd: "ypxfr -d {{ ypserver_domain }} -h {{ ypserver_master }} {{ item.split()[0] }}"
   with_items: "{{ ypserver__master_up.stdout_lines }}"
   when:
     - inventory_hostname != ypserver_master
     - not ypserver_nopush
 
 - name: "Ensure regular map updates on master"
-  cron:
+  ansible.builtin.cron:
     name: "Update YP domain {{ ypserver_domain }}"
     minute: "*/15"
     job: "( cd {{ ypserver_ypdbdir_domain }} && make )"
@@ -162,7 +164,7 @@
     - ypserver_set_cronjob
 
 - name: "Place script to check for missing maps on slave"
-  template:
+  ansible.builtin.template:
     src: "ypxfr_update.sh.j2"
     dest: "/usr/local/sbin/ypxfr_update"
     mode: "0700"
@@ -172,7 +174,7 @@
     - inventory_hostname != ypserver_master
 
 - name: "Ensure regular checks for missed maps on slaves"
-  cron:
+  ansible.builtin.cron:
     name: "Update YP domain {{ ypserver_domain }}"
     minute: "5"
     hour: "*"

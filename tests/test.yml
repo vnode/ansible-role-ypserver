@@ -1,5 +1,6 @@
 ---
-- hosts: ypservers
+- name: Test ypserver setup
+  hosts: ypservers
 #  gather_facts: false
   vars:
     ansible_host_key_checking: false
@@ -46,7 +47,7 @@
 
   pre_tasks:
     - name: Create the directory to place the source files for our NIS maps
-      file:
+      ansible.builtin.file:
         path: "{{ ypserver_source_dir }}"
         state: directory
         owner: root
@@ -56,7 +57,7 @@
         - inventory_hostname == ypserver_master
 
     - name: Create a master.passwd file
-      copy:
+      ansible.builtin.copy:
         dest: "{{ ypserver_source_dir }}/master.passwd"
         content: |
           root:*************:0:0:daemon:0:0:Charlie &:/root:/bin/ksh
@@ -70,7 +71,7 @@
         - inventory_hostname == ypserver_master
 
     - name: Create a group file
-      copy:
+      ansible.builtin.copy:
         dest: "{{ ypserver_source_dir }}/group"
         content: |
           wheel:*:0:root

@@ -1,5 +1,5 @@
 ---
-- name: reload ypserv
-  service:
+- name: Reload ypserv
+  ansible.builtin.service:
     name: ypserv
     state: reloaded

@@ -1,6 +1,6 @@
 ---
 - name: "Add YP domain to main YP Makefile"
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "{{ ypserver_ypdbdir }}/Makefile.main"
     line: "SUBDIR += {{ ypserver_domain }}"
     insertafter: "SUBDIR="
@@ -9,7 +9,7 @@
     group: wheel
 
 - name: "Create YP domain Makefile"
-  template:
+  ansible.builtin.template:
     src: "Makefile.yp.j2"
     dest: "{{ ypserver_ypdbdir_domain }}/Makefile"
     mode: "0600"
@@ -17,7 +17,7 @@
     group: wheel
 
 - name: "Update ypservers map"
-  template:
+  ansible.builtin.template:
     src: "ypservers.j2"
     dest: "{{ ypserver_ypdbdir_domain }}/ypservers"
     mode: "0600"
@@ -25,19 +25,18 @@
     group: wheel
   register: ypserver__ypservers_map
 
-- name: "Regenerate ypservers.db from map" # noqa no-handler
+- name: "Regenerate ypservers.db from map" # noqa no-handler no-changed-when
   # Intentionally not a handler, as this needs to run in-line, not at end-of-play
-  command:
-  args:
+  ansible.builtin.command:
     chdir: "{{ ypserver_ypdbdir_domain }}"
     cmd: "/usr/sbin/makedbm -m {{ ypserver_master }} ypservers ypservers"
   notify:
-    - reload ypserv
+    - Reload ypserv
   when:
     - ypserver__ypservers_map.changed
 
 - name: "Ensure the maps exist on the master server"
-  command:
+  ansible.builtin.command:
     chdir: "{{ ypserver_ypdbdir_domain }}"
     # NOPUSH=True ensures we only update locally
     cmd: "make NOPUSH=True {{ item }}"
