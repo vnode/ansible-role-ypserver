@@ -25,7 +25,7 @@
     group: wheel
   register: ypserver__ypservers_map
 
-- name: "Regenerate ypservers.db from map" # noqa 503
+- name: "Regenerate ypservers.db from map" # noqa no-handler
   # Intentionally not a handler, as this needs to run in-line, not at end-of-play
   command:
   args:

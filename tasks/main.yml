@@ -1,6 +1,6 @@
 ---
 - name: "Do input validation"
-  run_once: yes
+  run_once: True
   import_tasks: validate.yml
 
 # Initialize domain database
@@ -41,7 +41,7 @@
 - name: "Add servers to /etc/hosts"
   blockinfile:
     path: "/etc/hosts"
-    block: "{{ lookup('template', 'templates/hosts.j2') }}" # noqa 203
+    block: "{{ lookup('template', 'templates/hosts.j2') }}" # noqa no-tabs
     # The tab characters are intentional
     marker: "# {mark} {{ ypserver_domain }} - YP/NIS servers"
     mode: "0644"

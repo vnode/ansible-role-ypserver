@@ -10,7 +10,7 @@
     ansible_become_user: root
 
   roles:
-    - role: "{{ 'vnode.' if lookup('env','ROLE_NAME') else 'ansible-role-' }}ypserver"
+    - role: vnode.ypserver
       vars:
         ypserver_domain: "nisdomain"
         ypserver_master: "master"
